@@ -64,6 +64,8 @@ choco -?
 ```
 👉 Follow official documentation for more info: [Install Choco on windows](https://chocolatey.org/install)
 
+😀 Happy Learning
+
 
 
 
