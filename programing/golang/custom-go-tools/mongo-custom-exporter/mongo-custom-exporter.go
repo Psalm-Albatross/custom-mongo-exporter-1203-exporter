@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -56,6 +57,8 @@ var (
 	disableMemoryUsage    bool
 	disableLockMetrics    bool
 	disableNetworkMetrics bool
+	// version variable to check build version of custom-mongo-exporter tools
+	version string
 )
 
 func init() {
@@ -224,6 +227,9 @@ func collectSystemMetrics() {
 }
 
 func main() {
+
+	versionFlag := flag.Bool("version", false, "Prints version information")
+	flag.BoolVar(versionFlag, "V", false, "Prints version information (alias)")
 	uri := flag.String("uri", os.Getenv("MONGO_URI"), "MongoDB URI")
 	user := flag.String("user", os.Getenv("MONGO_USER"), "MongoDB username")
 	password := flag.String("password", os.Getenv("MONGO_PASSWORD"), "MongoDB password")
@@ -257,6 +263,12 @@ func main() {
 	}
 
 	flag.Parse()
+
+	// Check if the version flag is set
+	if *versionFlag {
+		fmt.Printf("Custom Mongo Exporter Version: %s\n", version)
+		return
+	}
 
 	if *uri == "" {
 		log.Fatal("MongoDB URI is required. Set it using the --uri flag or the MONGO_URI environment variable.")
