@@ -57,7 +57,7 @@ var (
 	disableMemoryUsage    bool
 	disableLockMetrics    bool
 	disableNetworkMetrics bool
-	// version variable to check build version of custom-mongo-exporter tools
+	// Version variable to check build version of custom-mongo-exporter tools
 	version string
 )
 
@@ -72,6 +72,10 @@ func init() {
 }
 
 func collectMongoMetrics(uri, user, password string) {
+	// Context with timeout to prevent hanging operations
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	clientOpts := options.Client().ApplyURI(uri)
 	if user != "" && password != "" {
 		clientOpts.SetAuth(options.Credential{Username: user, Password: password})
@@ -80,16 +84,28 @@ func collectMongoMetrics(uri, user, password string) {
 		log.Println("No MongoDB credentials provided, attempting connection without authentication.")
 	}
 
-	client, err := mongo.Connect(context.TODO(), clientOpts)
+	client, err := mongo.Connect(ctx, clientOpts)
 	if err != nil {
 		log.Printf("Failed to connect to MongoDB: %v", err)
 		mongoUp.Set(0)
 		return
 	}
-	defer client.Disconnect(context.TODO())
-	log.Println("Connected to MongoDB successfully.")
+	defer func() {
+		if err := client.Disconnect(ctx); err != nil {
+			log.Printf("Error disconnecting from MongoDB: %v", err)
+		}
+	}()
 
-	err = client.Ping(context.TODO(), readpref.Primary())
+	// Check the connection
+	if err := client.Ping(ctx, readpref.Primary()); err != nil {
+		log.Printf("MongoDB ping failed: %v", err)
+		mongoUp.Set(0)
+		return
+	}
+	log.Println("Connected to MongoDB successfully!")
+	mongoUp.Set(1)
+
+	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
 		log.Printf("MongoDB ping failed: %v", err)
 		mongoUp.Set(0)
@@ -98,7 +114,7 @@ func collectMongoMetrics(uri, user, password string) {
 	mongoUp.Set(1)
 
 	serverStatus := bson.M{}
-	if err := client.Database("admin").RunCommand(context.TODO(), bson.M{"serverStatus": 1}).Decode(&serverStatus); err == nil {
+	if err := client.Database("admin").RunCommand(ctx, bson.M{"serverStatus": 1}).Decode(&serverStatus); err == nil {
 		// Op Counters
 		if !disableOpCounters {
 			if opCounters, ok := serverStatus["opcounters"].(bson.M); ok {
@@ -146,7 +162,7 @@ func collectMongoMetrics(uri, user, password string) {
 
 	// DB Count and Listing
 	if !disableDBListing {
-		dbs, err := client.ListDatabaseNames(context.TODO(), bson.M{})
+		dbs, err := client.ListDatabaseNames(ctx, bson.M{})
 		if err != nil {
 			log.Printf("Failed to list databases: %v", err)
 		} else {
@@ -161,7 +177,7 @@ func collectMongoMetrics(uri, user, password string) {
 	// Replication Lag
 	if !disableReplication {
 		replStatus := bson.M{}
-		if err := client.Database("admin").RunCommand(context.TODO(), bson.M{"replSetGetStatus": 1}).Decode(&replStatus); err == nil {
+		if err := client.Database("admin").RunCommand(ctx, bson.M{"replSetGetStatus": 1}).Decode(&replStatus); err == nil {
 			if members, ok := replStatus["members"].(primitive.A); ok {
 				for _, member := range members {
 					if memberInfo, ok := member.(bson.M); ok {
@@ -178,7 +194,7 @@ func collectMongoMetrics(uri, user, password string) {
 	// Idle Connections
 	if !disableNetworkMetrics {
 		serverStatus := bson.M{}
-		if err := client.Database("admin").RunCommand(context.TODO(), bson.M{"serverStatus": 1}).Decode(&serverStatus); err == nil {
+		if err := client.Database("admin").RunCommand(ctx, bson.M{"serverStatus": 1}).Decode(&serverStatus); err == nil {
 			if connections, ok := serverStatus["connections"].(bson.M); ok {
 				if idle, ok := connections["available"].(int32); ok {
 					mongoIdleConnections.Set(float64(idle))
@@ -227,13 +243,13 @@ func collectSystemMetrics() {
 }
 
 func main() {
-
+	var MongoDefaultPort string = "1203"
 	versionFlag := flag.Bool("version", false, "Prints version information")
 	flag.BoolVar(versionFlag, "V", false, "Prints version information (alias)")
 	uri := flag.String("uri", os.Getenv("MONGO_URI"), "MongoDB URI")
 	user := flag.String("user", os.Getenv("MONGO_USER"), "MongoDB username")
 	password := flag.String("password", os.Getenv("MONGO_PASSWORD"), "MongoDB password")
-	port := flag.String("port", "8080", "Port to serve metrics on")
+	port := flag.String("port", MongoDefaultPort, "Port to serve metrics on, default is 1203")
 
 	// Flags to enable/disable specific metrics
 	flag.BoolVar(&disableDBListing, "disable_db_listing", false, "Disable database listing metric")
@@ -256,7 +272,7 @@ func main() {
 		log.Println("-disable_network_metrics: Disable network metrics")
 		log.Println("-disable_op_counters: Disable operation counters metric")
 		log.Println("-password: MongoDB password (default empty)")
-		log.Println("-port: Port to serve metrics on (default 8080)")
+		log.Println("-port: Port to serve metrics on (default 1203)")
 		log.Println("-uri: MongoDB URI (required)")
 		log.Println("-user: MongoDB username (default empty)")
 		os.Exit(0)
@@ -283,7 +299,7 @@ func main() {
 		}
 	}()
 
-	log.Printf("Starting MongoDB Exporter on :%s", *port)
+	log.Printf("Starting MongoDB Exporter on: %s", *port)
 	if err := http.ListenAndServe(":"+*port, nil); err != nil {
 		log.Fatalf("Error starting HTTP server: %v", err)
 	}
