@@ -1,0 +1,211 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Advanced MongoDB Dashboard",
+    "tags": ["mongodb"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "10s",
+    "panels": [
+      {
+        "type": "graph",
+        "title": "MongoDB Up",
+        "targets": [
+          {
+            "expr": "mongodb_up",
+            "legendFormat": "MongoDB Up",
+            "refId": "A"
+          }
+        ],
+        "id": 1
+      },
+      {
+        "type": "graph",
+        "title": "MongoDB Replication Lag",
+        "targets": [
+          {
+            "expr": "mongodb_replication_lag",
+            "legendFormat": "{{replica_set_member}}",
+            "refId": "A"
+          }
+        ],
+        "id": 2
+      },
+      {
+        "type": "graph",
+        "title": "MongoDB Memory Usage",
+        "targets": [
+          {
+            "expr": "mongodb_memory_usage_bytes",
+            "legendFormat": "Memory Usage",
+            "refId": "A"
+          }
+        ],
+        "id": 3
+      },
+      {
+        "type": "graph",
+        "title": "MongoDB Query Latency",
+        "targets": [
+          {
+            "expr": "avg(mongodb_query_latency_ms) by (collection)",
+            "legendFormat": "{{collection}}",
+            "refId": "A"
+          }
+        ],
+        "id": 4
+      },
+      {
+        "type": "graph",
+        "title": "MongoDB Transactions Per Second",
+        "targets": [
+          {
+            "expr": "mongodb_transactions_per_second",
+            "legendFormat": "TPS",
+            "refId": "A"
+          }
+        ],
+        "id": 5
+      },
+      {
+        "type": "graph",
+        "title": "MongoDB Index Usage",
+        "targets": [
+          {
+            "expr": "mongodb_index_usage",
+            "legendFormat": "{{index}}",
+            "refId": "A"
+          }
+        ],
+        "id": 6
+      },
+      {
+        "type": "graph",
+        "title": "MongoDB Document Metrics",
+        "targets": [
+          {
+            "expr": "rate(mongodb_document_inserts[1m])",
+            "legendFormat": "Inserts",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(mongodb_document_updates[1m])",
+            "legendFormat": "Updates",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(mongodb_document_deletes[1m])",
+            "legendFormat": "Deletes",
+            "refId": "C"
+          }
+        ],
+        "id": 7
+      },
+      {
+        "type": "graph",
+        "title": "MongoDB Connection Metrics",
+        "targets": [
+          {
+            "expr": "mongodb_active_connections",
+            "legendFormat": "Active Connections",
+            "refId": "A"
+          },
+          {
+            "expr": "mongodb_total_connections",
+            "legendFormat": "Total Connections",
+            "refId": "B"
+          }
+        ],
+        "id": 8
+      },
+      {
+        "type": "graph",
+        "title": "MongoDB Operation Latency",
+        "targets": [
+          {
+            "expr": "mongodb_op_latency_ms",
+            "legendFormat": "{{operation}}",
+            "refId": "A"
+          }
+        ],
+        "id": 9
+      },
+      {
+        "type": "graph",
+        "title": "MongoDB Query Execution Time",
+        "targets": [
+          {
+            "expr": "mongodb_query_execution_time_ms",
+            "legendFormat": "{{collection}}",
+            "refId": "A"
+          }
+        ],
+        "id": 10
+      },
+      {
+        "type": "graph",
+        "title": "MongoDB Query Performance",
+        "targets": [
+          {
+            "expr": "mongodb_query_performance",
+            "legendFormat": "{{collection}} {{metric}}",
+            "refId": "A"
+          }
+        ],
+        "id": 11
+      },
+      {
+        "type": "piechart",
+        "title": "MongoDB Document Operations",
+        "targets": [
+          {
+            "expr": "sum(rate(mongodb_document_inserts[1m]))",
+            "legendFormat": "Inserts",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(mongodb_document_updates[1m]))",
+            "legendFormat": "Updates",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(rate(mongodb_document_deletes[1m]))",
+            "legendFormat": "Deletes",
+            "refId": "C"
+          }
+        ],
+        "id": 12
+      },
+      {
+        "type": "donut",
+        "title": "MongoDB Connection Distribution",
+        "targets": [
+          {
+            "expr": "mongodb_active_connections",
+            "legendFormat": "Active Connections",
+            "refId": "A"
+          },
+          {
+            "expr": "mongodb_total_connections",
+            "legendFormat": "Total Connections",
+            "refId": "B"
+          }
+        ],
+        "id": 13
+      },
+      {
+        "type": "heatmap",
+        "title": "MongoDB Query Latency Heatmap",
+        "targets": [
+          {
+            "expr": "avg_over_time(mongodb_query_latency_ms[1m])",
+            "legendFormat": "{{collection}}",
+            "refId": "A"
+          }
+        ],
+        "id": 14
+      }
+    ]
+  }
+}

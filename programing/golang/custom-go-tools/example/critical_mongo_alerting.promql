@@ -1,0 +1,109 @@
+# Alert if MongoDB is down
+ALERT MongoDBDown
+  IF mongodb_up == 0
+  FOR 5m
+  LABELS { severity = "critical" }
+  ANNOTATIONS {
+    summary = "MongoDB is down",
+    description = "MongoDB instance has been down for more than 5 minutes.",
+  }
+
+# Alert if MongoDB replication lag is too high
+ALERT MongoDBReplicationLagHigh
+  IF mongodb_replication_lag > 10
+  FOR 5m
+  LABELS { severity = "critical" }
+  ANNOTATIONS {
+    summary = "High MongoDB replication lag",
+    description = "MongoDB replication lag is greater than 10 seconds for more than 5 minutes.",
+  }
+
+# Alert if MongoDB memory usage is too high
+ALERT MongoDBMemoryUsageHigh
+  IF mongodb_memory_usage_bytes > 8e+9
+  FOR 5m
+  LABELS { severity = "critical" }
+  ANNOTATIONS {
+    summary = "High MongoDB memory usage",
+    description = "MongoDB memory usage is greater than 8GB for more than 5 minutes.",
+  }
+
+# Alert if MongoDB query latency is too high
+ALERT MongoDBQueryLatencyHigh
+  IF avg(mongodb_query_latency_ms) by (collection) > 100
+  FOR 5m
+  LABELS { severity = "critical" }
+  ANNOTATIONS {
+    summary = "High MongoDB query latency",
+    description = "MongoDB query latency is greater than 100ms for more than 5 minutes.",
+  }
+
+# Alert if MongoDB transactions per second is too low
+ALERT MongoDBTransactionsPerSecondLow
+  IF mongodb_transactions_per_second < 1
+  FOR 5m
+  LABELS { severity = "critical" }
+  ANNOTATIONS {
+    summary = "Low MongoDB transactions per second",
+    description = "MongoDB transactions per second is less than 1 for more than 5 minutes.",
+  }
+
+# Alert if MongoDB document deletions are detected
+ALERT MongoDBDocumentDeletions
+  IF mongodb_document_deletes > 0
+  FOR 1m
+  LABELS { severity = "critical" }
+  ANNOTATIONS {
+    summary = "MongoDB document deletions detected",
+    description = "MongoDB document deletions have been detected.",
+  }
+
+# Alert if critical MongoDB commands are executed
+ALERT MongoDBCriticalCommandExecuted
+  IF mongodb_op_counters{type="command"} > 0
+  FOR 1m
+  LABELS { severity = "critical" }
+  ANNOTATIONS {
+    summary = "Critical MongoDB command executed",
+    description = "A critical MongoDB command has been executed.",
+  }
+
+# Alert if MongoDB slow queries are detected
+ALERT MongoDBSlowQueries
+  IF avg(mongodb_query_latency_ms) by (collection) > 500
+  FOR 5m
+  LABELS { severity = "critical" }
+  ANNOTATIONS {
+    summary = "MongoDB slow queries detected",
+    description = "MongoDB query latency is greater than 500ms for more than 5 minutes.",
+  }
+
+# Alert if MongoDB disk read bytes are too high
+ALERT MongoDBDiskReadHigh
+  IF mongodb_disk_read_bytes > 1e+9
+  FOR 5m
+  LABELS { severity = "critical" }
+  ANNOTATIONS {
+    summary = "High MongoDB disk read bytes",
+    description = "MongoDB disk read bytes are greater than 1GB for more than 5 minutes.",
+  }
+
+# Alert if MongoDB disk write bytes are too high
+ALERT MongoDBDiskWriteHigh
+  IF mongodb_disk_write_bytes > 1e+9
+  FOR 5m
+  LABELS { severity = "critical" }
+  ANNOTATIONS {
+    summary = "High MongoDB disk write bytes",
+    description = "MongoDB disk write bytes are greater than 1GB for more than 5 minutes.",
+  }
+
+# Alert if MongoDB errors are detected
+ALERT MongoDBErrors
+  IF increase(mongodb_error_count[5m]) > 0
+  FOR 5m
+  LABELS { severity = "critical" }
+  ANNOTATIONS {
+    summary = "MongoDB errors detected",
+    description = "MongoDB errors have been detected in the last 5 minutes.",
+  }
