@@ -782,7 +782,7 @@ func main() {
 
 	// Check if the version flag is set
 	if *versionFlag {
-		fmt.Printf("Custom Mongo Exporter Version: %s\n", version)
+		fmt.Printf("Custom Mongo Exporter Version(CME-1203): %s\n", version)
 		return
 	}
 
