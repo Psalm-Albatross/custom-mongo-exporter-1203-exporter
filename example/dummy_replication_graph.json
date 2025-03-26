@@ -1,0 +1,44 @@
+{
+  "dashboard": {
+    "title": "Dummy Replication Lag Graph",
+    "panels": [
+      {
+        "type": "graph",
+        "title": "Replication Lag (Dummy Data)",
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 3600 },
+                { "color": "red", "value": 7200 }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "expr": "mongodb_replication_lag{replica_set_member=\"node1\"}",
+            "legendFormat": "Node1"
+          },
+          {
+            "expr": "mongodb_replication_lag{replica_set_member=\"node2\"}",
+            "legendFormat": "Node2"
+          },
+          {
+            "expr": "mongodb_replication_lag{replica_set_member=\"node3\"}",
+            "legendFormat": "Node3"
+          }
+        ],
+        "options": {
+          "tooltip": {
+            "mode": "all",
+            "sort": "none"
+          }
+        }
+      }
+    ]
+  }
+}
