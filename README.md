@@ -20,7 +20,7 @@ Custom 1203 MongoDB (Custom-1203-Mongo-Exporter) Exporter is a tool designed to 
 ## Installation
 
 ### Download Binary
-You can download the latest release of `custom-1203-mongo-exporter` from the [GitHub Releases](https://github.com/your-repo/releases) page. Choose the appropriate binary for your platform and architecture.
+You can download the latest release of `custom-1203-mongo-exporter` from the [GitHub Releases](https://github.com/Psalm-Albatross/custom-mongo-exporter-1203-exporter//releases) page. Choose the appropriate binary for your platform and architecture.
 
 ### Example Naming for Binaries
 - **Linux x86_64**: `custom-1203-mongo-exporter-v1.0.0-linux-amd64`
