@@ -2,7 +2,7 @@
 OUTPUT_DIR := bin
 
 # Define the platforms to build for
-PLATFORMS := linux/386 linux/amd64 darwin/386 darwin/amd64 windows/386 windows/amd64
+PLATFORMS := linux/386 linux/amd64 darwin/amd64 windows/386 windows/amd64
 
 # Get the version from the latest Git tag
 VERSION := $(shell git describe --tags --abbrev=0)

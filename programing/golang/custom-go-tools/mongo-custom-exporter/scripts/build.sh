@@ -19,10 +19,6 @@ echo "Built for Linux 32-bit"
 GOOS=linux GOARCH=amd64 go build -ldflags="-X main.version=${BUILD_VERSION}" -o $OUTPUT_DIR/custom-1203-mongo-exporter-linux-amd64 ../custom-mongo-exporter.go
 echo "Built for Linux 64-bit"
 
-# Build for macOS 32-bit
-GOOS=darwin GOARCH=386 go build -ldflags="-X main.version=${BUILD_VERSION}" -o $OUTPUT_DIR/custom-1203-mongo-exporter-macos-386 ../custom-mongo-exporter.go
-echo "Built for macOS 32-bit"
-
 # Build for macOS 64-bit
 GOOS=darwin GOARCH=amd64 go build -ldflags="-X main.version=${BUILD_VERSION}" -o $OUTPUT_DIR/custom-1203-mongo-exporter-macos-amd64 ../custom-mongo-exporter.go
 echo "Built for macOS 64-bit"
