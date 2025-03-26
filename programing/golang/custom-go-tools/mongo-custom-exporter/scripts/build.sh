@@ -1,7 +1,9 @@
 #!/bin/bash
 echo "Creating build for Windows, Linux and MacOS"
-BUILD_VERSION="v1.1.1"
-echo "Alpha Version Release Building binary with new version $BUILD_VERSION"
+
+# Get the version from the latest Git tag
+BUILD_VERSION=$(git describe --tags --abbrev=0)
+echo "Alpha Version Release Building binary with version $BUILD_VERSION"
 
 # Define the output directory
 OUTPUT_DIR="../bin"

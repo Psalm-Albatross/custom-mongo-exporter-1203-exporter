@@ -4,6 +4,9 @@ OUTPUT_DIR := bin
 # Define the platforms to build for
 PLATFORMS := linux/386 linux/amd64 darwin/386 darwin/amd64 windows/386 windows/amd64
 
+# Get the version from the latest Git tag
+VERSION := $(shell git describe --tags --abbrev=0)
+
 # Default target
 .PHONY: all
 all: build
@@ -22,7 +25,7 @@ $(PLATFORMS):
 		OUTPUT_NAME+=".exe"; \
 	fi; \
 	echo "Building for $$OS/$$ARCH..."; \
-	GOOS=$$OS GOARCH=$$ARCH go build -ldflags="-X main.version=v0.0.1-alpha" -o $(OUTPUT_DIR)/$$OUTPUT_NAME ./custom-mongo-exporter.go
+	GOOS=$$OS GOARCH=$$ARCH go build -ldflags="-X main.version=$(VERSION)" -o $(OUTPUT_DIR)/$$OUTPUT_NAME ./custom-mongo-exporter.go
 
 # Clean target
 .PHONY: clean
