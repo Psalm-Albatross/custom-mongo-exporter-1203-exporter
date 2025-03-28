@@ -427,6 +427,10 @@ func collectMongoMetrics(uri, user, password string) {
 	if !disableReplication {
 		replStatus := bson.M{}
 		if err := client.Database("admin").RunCommand(ctx, bson.M{"replSetGetStatus": 1}).Decode(&replStatus); err != nil {
+			if cmdErr, ok := err.(mongo.CommandError); ok && cmdErr.Code == 76 { // 76: NoReplicationEnabled
+				log.Println("Skipping replica set metrics: Not running with --replSet.")
+				return
+			}
 			log.Printf("Failed to get replication status: %v", err)
 			mongoErrorCount.WithLabelValues("replication_status").Inc()
 		} else {
@@ -479,24 +483,34 @@ func collectMongoMetrics(uri, user, password string) {
 
 func collectShardMetrics(client *mongo.Client, ctx context.Context) {
 	log.Println("Collecting shard metrics...")
-	shardStatus := bson.M{}
-	if err := client.Database("admin").RunCommand(ctx, bson.M{"listShards": 1}).Decode(&shardStatus); err != nil {
-		log.Printf("Failed to get shard status: %v", err)
-		mongoErrorCount.WithLabelValues("shard_status").Inc()
+	shardsCollection := client.Database("config").Collection("shards")
+
+	cursor, err := shardsCollection.Find(ctx, bson.M{})
+	if err != nil {
+		log.Printf("Failed to query shards collection: %v", err)
+		mongoErrorCount.WithLabelValues("shard_query").Inc()
 		return
 	}
+	defer cursor.Close(ctx)
 
-	if shards, ok := shardStatus["shards"].(primitive.A); ok {
-		mongoShardCount.Set(float64(len(shards)))
-		for _, shard := range shards {
-			if shardInfo, ok := shard.(bson.M); ok {
-				shardName := shardInfo["_id"].(string)
-				// Example: Add shard-specific metrics
-				mongoShardStats.WithLabelValues(shardName, "example_metric").Set(1) // Replace with actual metrics
-			}
+	shardCount := 0
+	for cursor.Next(ctx) {
+		shardCount++
+		shard := bson.M{}
+		if err := cursor.Decode(&shard); err != nil {
+			log.Printf("Failed to decode shard document: %v", err)
+			mongoErrorCount.WithLabelValues("shard_decode").Inc()
+			continue
 		}
-		log.Println("Shard metrics collected.")
+
+		shardName, _ := shard["_id"].(string)
+		// Example: Add shard-specific metrics
+		mongoShardStats.WithLabelValues(shardName, "example_metric").Set(1) // Replace with actual metrics
+		log.Printf("Shard found: %s", shardName)
 	}
+
+	mongoShardCount.Set(float64(shardCount))
+	log.Printf("Total shards: %d", shardCount)
 	log.Println("Shard metrics collection completed.")
 }
 
@@ -504,6 +518,10 @@ func collectReplicaSetMetrics(client *mongo.Client, ctx context.Context) {
 	log.Println("Collecting replica set metrics...")
 	replStatus := bson.M{}
 	if err := client.Database("admin").RunCommand(ctx, bson.M{"replSetGetStatus": 1}).Decode(&replStatus); err != nil {
+		if cmdErr, ok := err.(mongo.CommandError); ok && cmdErr.Code == 76 { // 76: NoReplicationEnabled
+			log.Println("Skipping replica set metrics: Not running with --replSet.")
+			return
+		}
 		log.Printf("Failed to get replica set status: %v", err)
 		mongoErrorCount.WithLabelValues("replica_set_status").Inc()
 		return
@@ -554,20 +572,24 @@ func collectDetailedOperationMetrics(client *mongo.Client, ctx context.Context) 
 
 func collectAdvancedMetrics(client *mongo.Client, ctx context.Context) {
 	log.Println("Collecting advanced metrics...")
-	// Collect Slow Queries
 	currentOp := bson.M{}
 	if err := client.Database("admin").RunCommand(ctx, bson.M{"currentOp": 1, "active": true}).Decode(&currentOp); err != nil {
+		if cmdErr, ok := err.(mongo.CommandError); ok && cmdErr.Code == 9 { // 9: Failed to parse
+			log.Println("Skipping advanced metrics: 'currentOp' command not supported.")
+			return
+		}
 		log.Printf("Failed to get current operations: %v", err)
 		mongoErrorCount.WithLabelValues("current_op").Inc()
-	} else {
-		if inprog, ok := currentOp["inprog"].(primitive.A); ok {
-			for _, op := range inprog {
-				if opInfo, ok := op.(bson.M); ok {
-					if ns, ok := opInfo["ns"].(string); ok && ns != "" {
-						if millis, ok := opInfo["millis"].(int32); ok && millis > 100 { // Assuming 100ms as the threshold for slow queries
-							mongoSlowQueries.WithLabelValues(ns).Inc()
-							log.Printf("Slow query detected on collection %s: %d ms", ns, millis)
-						}
+		return
+	}
+
+	if inprog, ok := currentOp["inprog"].(primitive.A); ok {
+		for _, op := range inprog {
+			if opInfo, ok := op.(bson.M); ok {
+				if ns, ok := opInfo["ns"].(string); ok && ns != "" {
+					if millis, ok := opInfo["millis"].(int32); ok && millis > 100 { // Assuming 100ms as the threshold for slow queries
+						mongoSlowQueries.WithLabelValues(ns).Inc()
+						log.Printf("Slow query detected on collection %s: %d ms", ns, millis)
 					}
 				}
 			}
