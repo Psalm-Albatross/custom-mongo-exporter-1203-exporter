@@ -1,6 +1,6 @@
 # Ignore the binary files
-/bin
-/bin/*
+# /bin
+# /bin/*
 
 # Ignore Go build artifacts
 *.exe
